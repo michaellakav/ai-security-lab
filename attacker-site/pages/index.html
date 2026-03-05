@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Security Lab - Attacker Site</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        h1 { color: #e94560; }
+        .warning {
+            background: #e94560;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .page-list {
+            list-style: none;
+            padding: 0;
+        }
+        .page-list li {
+            background: #16213e;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #0f3460;
+        }
+        .page-list li.attack {
+            border-left-color: #e94560;
+        }
+        .page-list a {
+            display: block;
+            padding: 1rem;
+            color: #6db3f2;
+            text-decoration: none;
+        }
+        .page-list a:hover {
+            background: #0f3460;
+        }
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+        }
+        .tag.safe { background: #28a745; }
+        .tag.attack { background: #e94560; }
+        .description {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Attacker Site - AI Security Lab</h1>
+    
+    <div class="warning">
+        ⚠️ This site hosts pages with intentional prompt injection payloads for security training.
+    </div>
+    
+    <h2>Test Pages</h2>
+    <ul class="page-list">
+        <li>
+            <a href="/innocent-article.html">
+                Innocent Article <span class="tag safe">SAFE</span>
+                <div class="description">Baseline - normal article with no injection</div>
+            </a>
+        </li>
+        <li class="attack">
+            <a href="/attack-comment.html">
+                HTML Comment Injection <span class="tag attack">ATTACK</span>
+                <div class="description">Instructions hidden in HTML comments</div>
+            </a>
+        </li>
+        <li class="attack">
+            <a href="/attack-invisible.html">
+                Invisible Text Injection <span class="tag attack">ATTACK</span>
+                <div class="description">Instructions in CSS-hidden elements</div>
+            </a>
+        </li>
+        <li class="attack">
+            <a href="/attack-alt.html">
+                Image Alt Text Injection <span class="tag attack">ATTACK</span>
+                <div class="description">Instructions in image alt attributes</div>
+            </a>
+        </li>
+        <li class="attack">
+            <a href="/attack-unicode.html">
+                Unicode Obfuscation <span class="tag attack">ATTACK</span>
+                <div class="description">Hidden instructions via Unicode tricks and data attributes</div>
+            </a>
+        </li>
+        <li class="attack">
+            <a href="/attack-exfil.html">
+                Data Exfiltration Attempt <span class="tag attack">ATTACK</span>
+                <div class="description">Attempts to trigger tool calls for data theft</div>
+            </a>
+        </li>
+    </ul>
+    
+    <h2>How to Use</h2>
+    <p>Use the URL Summarizer at <a href="http://localhost:5050/summarizer" style="color:#6db3f2">http://localhost:5050/summarizer</a> to fetch these pages and observe how the AI responds to different injection techniques.</p>
+</body>
+</html>

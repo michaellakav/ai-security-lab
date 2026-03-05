@@ -1,0 +1,95 @@
+# MCP Gateway Security Policies
+# AI Security Training Lab
+version: "1.0"
+
+global:
+  # Tools that require explicit user confirmation before execution
+  require_user_confirmation:
+    - send_email
+    - file_write
+    - run_command
+    - delete_file
+  
+  # Rate limits (requests per minute)
+  rate_limits:
+    default: 100
+    sensitive_tools: 10
+
+tools:
+  file_read:
+    # Only allow reading from these directories
+    allowed_paths:
+      - "/app/data/**"
+      - "/app/uploads/**"
+    
+    # Block files matching these patterns
+    blocked_patterns:
+      - "*.env"
+      - "*credentials*"
+      - "*secret*"
+      - "*password*"
+      - "*.key"
+      - "*.pem"
+    
+    # Maximum file size (in bytes)
+    max_file_size: 1048576  # 1MB
+  
+  send_email:
+    # Require confirmation for all emails
+    require_confirmation: true
+    
+    # Only allow sending to these domains
+    allowed_recipients:
+      - "*@company.com"
+      - "*@techcorp.com"
+    
+    # Block these recipient patterns
+    blocked_recipients:
+      - "*@competitor.com"
+      - "*@external-*.com"
+    
+    # Scan attachments for malware
+    attachment_scan: true
+  
+  search_database:
+    # Sanitize output to remove injection attempts
+    output_sanitization: true
+    
+    # Maximum results per query
+    max_results: 100
+    
+    # Mask these fields in results
+    sensitive_field_masking:
+      - ssn
+      - credit_card
+      - password
+      - api_key
+
+content_filtering:
+  # Patterns that indicate potential prompt injection
+  instruction_patterns:
+    - "ignore previous instructions"
+    - "ignore all previous"
+    - "disregard above"
+    - "you are now"
+    - "new role"
+    - "system prompt"
+    - "reveal your instructions"
+    - "override"
+    - "admin mode"
+    - "developer mode"
+    - "jailbreak"
+  
+  # Action when injection-like content is detected
+  # Options: block, flag_and_sanitize, log_only
+  on_detection: flag_and_sanitize
+
+logging:
+  # Log level: verbose, normal, minimal
+  level: verbose
+  
+  # Include request/response payloads in logs
+  include_payloads: true
+  
+  # Redact sensitive data in logs
+  sensitive_redaction: true

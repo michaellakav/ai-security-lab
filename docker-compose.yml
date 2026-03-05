@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Vulnerable chatbot web application
+  # Supports OpenAI, Anthropic, or local Ollama
+  vulnerable-chatbot:
+    build: ./vulnerable-chatbot
+    ports:
+      - "5050:5000"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo-0125}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - ollama
+    networks:
+      - lab-network
+
+  # Local LLM via Ollama (free, no API key needed)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - lab-network
+    # Pull a small model on startup
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        /bin/ollama serve &
+        sleep 5
+        ollama pull llama3.2:1b
+        tail -f /dev/null
+
+  # Vulnerable MCP server with intentional security flaws
+  vulnerable-mcp:
+    build: ./vulnerable-mcp
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./vulnerable-mcp/data:/app/data
+      - ./vulnerable-mcp/secrets:/app/secrets
+    networks:
+      - lab-network
+
+  # Hardened MCP server (participants will build this)
+  secure-mcp:
+    build: ./secure-mcp
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./secure-mcp/data:/app/data
+    networks:
+      - lab-network
+
+  # MCP Gateway with policy engine
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - VULNERABLE_MCP_URL=http://vulnerable-mcp:3001
+      - SECURE_MCP_URL=http://secure-mcp:3002
+    volumes:
+      - ./gateway/policies.yaml:/app/policies.yaml
+    networks:
+      - lab-network
+
+  # Attacker-controlled website with injection payloads
+  attacker-site:
+    build: ./attacker-site
+    ports:
+      - "9090:9000"
+    networks:
+      - lab-network
+
+networks:
+  lab-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
