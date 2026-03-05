@@ -34,7 +34,7 @@ This lab provides:
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/michaellakav/ai-security-lab.git
 cd ai-security-lab
 
 # Copy environment template
