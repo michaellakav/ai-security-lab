@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analyzer - AI Security Lab</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+        .header {
+            background: #16213e;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #e94560; }
+        .nav { display: flex; gap: 1.5rem; }
+        .nav a {
+            color: #aaa;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        .nav a:hover, .nav a.active { color: #fff; background: #0f3460; }
+        .warning-banner {
+            background: #e94560;
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        h1 { margin-bottom: 1rem; }
+        .description { color: #888; margin-bottom: 2rem; line-height: 1.6; }
+        .upload-area {
+            border: 2px dashed #0f3460;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.2s;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+        .upload-area input { display: none; }
+        .upload-area label {
+            cursor: pointer;
+            color: #e94560;
+            font-weight: 500;
+        }
+        .upload-area p { color: #666; margin-top: 0.5rem; font-size: 0.9rem; }
+        .result {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 12px;
+            padding: 1.5rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            min-height: 200px;
+        }
+        .hint-box {
+            background: #1a1a2e;
+            border: 1px dashed #0f3460;
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        .hint-box summary { cursor: pointer; color: #e94560; font-weight: 500; }
+        .hint-box ul { margin-top: 0.5rem; padding-left: 1.5rem; }
+        .hint-box li { margin: 0.5rem 0; }
+        .sample-files {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #0f3460;
+            border-radius: 8px;
+        }
+        .sample-files h4 { margin-bottom: 0.5rem; color: #e94560; }
+        .sample-files a {
+            display: inline-block;
+            color: #6db3f2;
+            margin-right: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="warning-banner">
+        ⚠️ SECURITY TRAINING LAB - This application is intentionally vulnerable
+    </div>
+    
+    <div class="header">
+        <div class="logo">🤖 TechCorp Tools</div>
+        <nav class="nav">
+            <a href="/">Chat</a>
+            <a href="/summarizer">URL Summarizer</a>
+            <a href="/documents" class="active">Documents</a>
+            <a href="/email">Email Assistant</a>
+        </nav>
+    </div>
+    
+    <div class="container">
+        <h1>📁 Document Analyzer</h1>
+        <p class="description">
+            Upload a PDF or text document and our AI will analyze and summarize its contents.
+            Supported formats: PDF, TXT, MD
+        </p>
+        
+        <div class="upload-area" id="uploadArea">
+            <input type="file" id="fileInput" accept=".pdf,.txt,.md" onchange="analyzeFile()">
+            <label for="fileInput">📎 Click to upload or drag & drop</label>
+            <p>PDF, TXT, or MD files up to 10MB</p>
+        </div>
+        
+        <div class="result" id="result">
+            Upload a document to see the AI analysis.
+        </div>
+        
+        <div class="sample-files">
+            <h4>📥 Sample Malicious Documents</h4>
+            <a href="http://attacker-site:9000/samples/innocent-report.pdf" target="_blank">Innocent Report (baseline)</a>
+            <a href="http://attacker-site:9000/samples/malicious-hidden-text.pdf" target="_blank">PDF with Hidden Text</a>
+            <a href="http://attacker-site:9000/samples/malicious-metadata.pdf" target="_blank">PDF with Payload in Metadata</a>
+        </div>
+        
+        <details class="hint-box">
+            <summary>🎯 Module 2: Document Injection Hints</summary>
+            <ul>
+                <li>PDFs can contain white text on white background</li>
+                <li>PDF metadata fields can hold injection payloads</li>
+                <li>Text can be placed outside the visible page area</li>
+                <li>Font size can be set to 0 or near-zero</li>
+                <li>Create test documents with hidden instructions</li>
+            </ul>
+        </details>
+    </div>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                analyzeFile();
+            }
+        });
+        
+        async function analyzeFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Analyzing document...';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/analyze-document', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.textContent = 'Error: ' + data.error;
+                } else {
+                    resultDiv.textContent = data.analysis;
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

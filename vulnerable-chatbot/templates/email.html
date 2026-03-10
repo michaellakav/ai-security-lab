@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Assistant - AI Security Lab</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+        .header {
+            background: #16213e;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #e94560; }
+        .nav { display: flex; gap: 1.5rem; }
+        .nav a {
+            color: #aaa;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        .nav a:hover, .nav a.active { color: #fff; background: #0f3460; }
+        .warning-banner {
+            background: #e94560;
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 1rem;
+            height: calc(100vh - 120px);
+        }
+        .inbox {
+            background: #16213e;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .inbox-header {
+            padding: 1rem;
+            border-bottom: 1px solid #0f3460;
+            font-weight: 600;
+        }
+        .email-list {
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+        .email-item {
+            padding: 1rem;
+            border-bottom: 1px solid #0f3460;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .email-item:hover, .email-item.selected {
+            background: #0f3460;
+        }
+        .email-item.malicious {
+            border-left: 3px solid #e94560;
+        }
+        .email-from {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        .email-subject {
+            font-size: 0.9rem;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .email-date {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        .email-view {
+            background: #16213e;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        .email-view-header {
+            padding: 1rem;
+            border-bottom: 1px solid #0f3460;
+        }
+        .email-view-header h2 {
+            margin-bottom: 0.5rem;
+        }
+        .email-meta {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .email-body {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+        .email-actions {
+            padding: 1rem;
+            border-top: 1px solid #0f3460;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .email-actions button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: #e94560;
+            color: white;
+        }
+        .btn-secondary {
+            background: #0f3460;
+            color: #eee;
+        }
+        .ai-response {
+            background: #0d1b2a;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+        }
+        .ai-response-header {
+            color: #e94560;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .hint-box {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: #16213e;
+            border: 1px dashed #0f3460;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #888;
+            max-width: 350px;
+        }
+        .hint-box summary { cursor: pointer; color: #e94560; font-weight: 500; }
+        .hint-box ul { margin-top: 0.5rem; padding-left: 1.5rem; }
+        .hint-box li { margin: 0.3rem 0; }
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="warning-banner">
+        ⚠️ SECURITY TRAINING LAB - This application is intentionally vulnerable
+    </div>
+    
+    <div class="header">
+        <div class="logo">🤖 TechCorp Tools</div>
+        <nav class="nav">
+            <a href="/">Chat</a>
+            <a href="/summarizer">URL Summarizer</a>
+            <a href="/documents">Documents</a>
+            <a href="/email" class="active">Email Assistant</a>
+        </nav>
+    </div>
+    
+    <div class="container">
+        <div class="inbox">
+            <div class="inbox-header">📥 Inbox</div>
+            <div class="email-list" id="emailList">
+                {% for email in emails %}
+                <div class="email-item {% if email.id >= 3 %}malicious{% endif %}" 
+                     data-id="{{ email.id }}" onclick="selectEmail({{ email.id }})">
+                    <div class="email-from">{{ email['from'] }}</div>
+                    <div class="email-subject">{{ email.subject }}</div>
+                    <div class="email-date">{{ email.date }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="email-view" id="emailView">
+            <div class="empty-state">
+                Select an email to view
+            </div>
+        </div>
+    </div>
+    
+    <details class="hint-box">
+        <summary>🎯 Module 2: Email Injection Hints</summary>
+        <ul>
+            <li>Emails #3 and #4 contain injection payloads</li>
+            <li>Look for instructions hidden in HTML comments</li>
+            <li>Check for social engineering combined with injection</li>
+            <li>Try the "Summarize" and "Draft Reply" features</li>
+            <li>Notice how the AI follows embedded instructions</li>
+        </ul>
+    </details>
+    
+    <script>
+        let selectedEmail = null;
+        
+        async function selectEmail(id) {
+            // Update selection UI
+            document.querySelectorAll('.email-item').forEach(el => {
+                el.classList.remove('selected');
+                if (el.dataset.id == id) el.classList.add('selected');
+            });
+            
+            // Fetch email
+            const response = await fetch(`/email/${id}`);
+            const email = await response.json();
+            selectedEmail = email;
+            
+            // Display email - escape HTML for safety but show raw content
+            const escapeHtml = (text) => {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
+            
+            document.getElementById('emailView').innerHTML = `
+                <div class="email-view-header">
+                    <h2>${escapeHtml(email.subject)}</h2>
+                    <div class="email-meta">
+                        From: ${escapeHtml(email.from)} | Date: ${email.date}
+                    </div>
+                </div>
+                <div class="email-body">${escapeHtml(email.body)}</div>
+                <div class="email-actions">
+                    <button class="btn-primary" onclick="summarizeEmail(${id})">🤖 AI Summarize</button>
+                    <button class="btn-secondary" onclick="draftReply(${id})">✉️ Draft Reply</button>
+                </div>
+                <div id="aiResponse"></div>
+            `;
+        }
+        
+        async function summarizeEmail(id) {
+            const responseDiv = document.getElementById('aiResponse');
+            responseDiv.innerHTML = '<div class="ai-response">Analyzing email...</div>';
+            
+            const response = await fetch(`/email/${id}/summarize`, { method: 'POST' });
+            const data = await response.json();
+            
+            responseDiv.innerHTML = `
+                <div class="ai-response">
+                    <div class="ai-response-header">🤖 AI Summary</div>
+                    ${data.summary}
+                </div>
+            `;
+        }
+        
+        async function draftReply(id) {
+            const responseDiv = document.getElementById('aiResponse');
+            responseDiv.innerHTML = '<div class="ai-response">Drafting reply...</div>';
+            
+            const response = await fetch(`/email/${id}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instructions: 'Draft a professional reply' })
+            });
+            const data = await response.json();
+            
+            responseDiv.innerHTML = `
+                <div class="ai-response">
+                    <div class="ai-response-header">✉️ Draft Reply</div>
+                    ${data.reply}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

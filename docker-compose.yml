@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # Vulnerable chatbot web application
+  # Supports OpenAI, Anthropic, or local Ollama
+  vulnerable-chatbot:
+    build: ./vulnerable-chatbot
+    ports:
+      - "5050:5000"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo-0125}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
+      - PS_APP_ID=${PS_APP_ID:-}
+      - PS_GATEWAY_URL=${PS_GATEWAY_URL:-https://useast.prompt.security/v1/ollama}
+      - PS_FORWARD_DOMAIN=${PS_FORWARD_DOMAIN:-}
+      - REVIEW_SITE_URL=http://review-site:9091
+      - RAG_SERVICE_URL=http://rag-service:9092
+      - ATTACKER_DASHBOARD_URL=http://attacker-dashboard:6060
+    depends_on:
+      - ollama
+      - review-site
+      - rag-service
+      - attacker-dashboard
+    networks:
+      - lab-network
+
+  # Local LLM via Ollama (free, no API key needed)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - lab-network
+    # Pull a small model on startup
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        /bin/ollama serve &
+        sleep 5
+        ollama pull qwen2.5:1.5b
+        tail -f /dev/null
+
+  # Vulnerable MCP server with intentional security flaws
+  vulnerable-mcp:
+    build: ./vulnerable-mcp
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./vulnerable-mcp/data:/app/data
+      - ./vulnerable-mcp/secrets:/app/secrets
+    networks:
+      - lab-network
+
+  # Hardened MCP server (participants will build this)
+  secure-mcp:
+    build: ./secure-mcp
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./secure-mcp/data:/app/data
+    networks:
+      - lab-network
+
+  # MCP Gateway with policy engine
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - VULNERABLE_MCP_URL=http://vulnerable-mcp:3001
+      - SECURE_MCP_URL=http://secure-mcp:3002
+    volumes:
+      - ./gateway/policies.yaml:/app/policies.yaml
+    networks:
+      - lab-network
+
+  # Attacker-controlled website with injection payloads
+  attacker-site:
+    build: ./attacker-site
+    ports:
+      - "9090:9000"
+    networks:
+      - lab-network
+
+  # Fake product review site with poisoned reviews
+  review-site:
+    build: ./review-site
+    ports:
+      - "9091:9091"
+    networks:
+      - lab-network
+
+  # Simulated RAG knowledge base with poisoned documents
+  rag-service:
+    build: ./rag-service
+    ports:
+      - "9092:9092"
+    networks:
+      - lab-network
+
+  # Attacker dashboard - shows exfiltrated data in real-time
+  attacker-dashboard:
+    build: ./attacker-dashboard
+    ports:
+      - "6060:6060"
+    networks:
+      - lab-network
+
+networks:
+  lab-network:
+    driver: bridge
+
+volumes:
+  ollama-data:

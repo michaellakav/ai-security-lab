@@ -1,0 +1,25 @@
+# Environment files
+.env
+
+# Node modules
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Secrets (don't commit real secrets)
+*.key
+*.pem
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+docker-compose.override.yml

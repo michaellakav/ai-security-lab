@@ -1,0 +1,79 @@
+# MCP Gateway Security Policies
+# Edit this file and reload with: curl -X POST http://localhost:8080/policies/reload
+version: "1.0"
+
+global:
+  require_user_confirmation:
+    - send_email
+    - file_write
+    - run_command
+    - delete_file
+  
+  shell_integration: disabled
+  enforce_canonical_validation: true
+
+tools:
+  file_read:
+    # Only allow access to the data sandbox
+    allowed_paths:
+      - "/app/data/"
+      - "/app/uploads/"
+    
+    # Block ".." traversal attempts
+    disallow_traversal: true
+    
+    blocked_patterns:
+      - "/etc/*"
+      - "/root/*"
+      - "*.env"
+      - "*credential*"
+      - "*secret*"
+      - "/proc/*"
+  
+  list_directory:
+    allowed_paths:
+      - "/app/data/"
+      - "/app/uploads/"
+    disallow_traversal: true
+  
+  run_command:
+    use_shell: false
+    
+    allowed_commands:
+      - "/usr/bin/echo"
+      - "/usr/bin/ls"
+      - "/usr/bin/git"
+    
+    prohibited_characters: [";", "&", "|", ">", "<", "$", "`"]
+
+  send_email:
+    require_confirmation: true
+    allowed_recipients:
+      - "*@company.com"
+    blocked_recipients:
+      - "*@external.com"
+      - "*@evil.com"
+      - "*@attacker.com"
+  
+  fetch_url:
+    allowed_schemes:
+      - "https"
+    blocked_domains:
+      - "169.254.169.254"
+      - "localhost"
+      - "127.0.0.1"
+      - "internal"
+
+content_filtering:
+  instruction_patterns:
+    - "ignore previous instructions"
+    - "you are now"
+    - "system prompt"
+    - "disregard"
+    - "override"
+    - "admin mode"
+  on_detection: "flag_and_sanitize"
+
+logging:
+  level: verbose
+  include_payloads: true

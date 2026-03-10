@@ -1,0 +1,13 @@
+{
+  "name": "attacker-dashboard",
+  "version": "1.0.0",
+  "description": "Simulated attacker C2 dashboard showing exfiltrated data",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
